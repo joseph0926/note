@@ -1,0 +1,12 @@
+{
+  "private": true,
+  "scripts": {
+    "capture:reference": "playwright test -c playwright.reference.config.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.61.1",
+    "@types/node": "^26.1.0",
+    "typescript": "^6.0.3"
+  }
+}
