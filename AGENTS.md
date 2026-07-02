@@ -49,6 +49,7 @@
 - 가능한 경우 중앙 research wiki와 local design source of truth를 먼저 확인한다.
 - `uiux-experiment-runner` 산출물에는 brief, 후보안, screenshot path, 점수표, final direction, 남은 위험이 있어야 한다.
 - desktop/mobile screenshot evidence 없이 UI 실험 완료를 선언하지 않는다.
+- 반복 가능한 reference screenshot capture는 `docs/reference-capture.md`의 결정을 따른다.
 - 레퍼런스 단계의 산출물은 구현 지시가 아니라 SPEC 작성을 위한 판단 재료다.
 
 ## SPEC 작성 규칙
