@@ -106,6 +106,14 @@ Broad/high-risk reference는 필요하면 region zoom, reduced-motion, dark/ligh
 
 Playwright는 `@playwright/test` runner를 기준으로 둔다. 이유는 viewport, project, output, reporter, `webServer`, `baseURL` 같은 실행 계약을 config로 고정할 수 있기 때문이다. 근거: [[playwright/playwright-test-runner]], [[playwright/playwright-suite-operating-model]].
 
+TypeScript config는 root `tsconfig.json`에 두되, 현재는 capture tooling만 포함한다. 앱 scaffold가 생기기 전까지 이 config는 `playwright.reference.config.ts`와 `tools/**/*.ts`의 Node/Playwright 실행면만 타입체크한다. 근거: [[typescript/tsconfig]], [[typescript/compiler-options-by-runtime]].
+
+정적 타입 검증:
+
+```bash
+pnpm typecheck
+```
+
 실제 캡처는 아래 명령을 `## 실행 환경` 기준으로 승인된 외부 실행 또는 로컬 터미널에서 실행한다.
 
 ```bash

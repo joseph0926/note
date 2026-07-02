@@ -1,0 +1,131 @@
+{
+  "schema_version": 1,
+  "goal_slug": "production-todo-app",
+  "run_slug": "linear-workspace-run1",
+  "source": "docs/goals/production-todo-app/references/linear-workspace-run1/reference.html",
+  "captured_at": "2026-07-03",
+  "tool": "playwright",
+  "matrix": [
+    {
+      "id": "candidate-linear-queue-desktop",
+      "candidate": "linear-queue",
+      "state": "default",
+      "artifact_role": "whole-candidate-sheet",
+      "viewport": { "width": 1440, "height": 1000 },
+      "query": "?candidate=queue",
+      "output": "screenshots/candidate-linear-queue-desktop.png",
+      "selected": false
+    },
+    {
+      "id": "candidate-linear-queue-mobile",
+      "candidate": "linear-queue",
+      "state": "default",
+      "artifact_role": "mobile-reference",
+      "viewport": { "width": 390, "height": 844 },
+      "query": "?candidate=queue",
+      "output": "screenshots/candidate-linear-queue-mobile.png",
+      "selected": false
+    },
+    {
+      "id": "candidate-linear-detail-desktop",
+      "candidate": "linear-detail",
+      "state": "default",
+      "artifact_role": "whole-candidate-sheet",
+      "viewport": { "width": 1440, "height": 1000 },
+      "query": "?candidate=detail",
+      "output": "screenshots/candidate-linear-detail-desktop.png",
+      "selected": false
+    },
+    {
+      "id": "candidate-linear-detail-mobile",
+      "candidate": "linear-detail",
+      "state": "default",
+      "artifact_role": "mobile-reference",
+      "viewport": { "width": 390, "height": 844 },
+      "query": "?candidate=detail",
+      "output": "screenshots/candidate-linear-detail-mobile.png",
+      "selected": false
+    },
+    {
+      "id": "candidate-linear-review-desktop",
+      "candidate": "linear-review",
+      "state": "default",
+      "artifact_role": "whole-candidate-sheet",
+      "viewport": { "width": 1440, "height": 1000 },
+      "query": "?candidate=review",
+      "output": "screenshots/candidate-linear-review-desktop.png",
+      "selected": false
+    },
+    {
+      "id": "candidate-linear-review-mobile",
+      "candidate": "linear-review",
+      "state": "default",
+      "artifact_role": "mobile-reference",
+      "viewport": { "width": 390, "height": 844 },
+      "query": "?candidate=review",
+      "output": "screenshots/candidate-linear-review-mobile.png",
+      "selected": false
+    },
+    {
+      "id": "final-desktop",
+      "candidate": "final",
+      "state": "default",
+      "artifact_role": "selected-full",
+      "viewport": { "width": 1440, "height": 1000 },
+      "query": "?candidate=final",
+      "output": "screenshots/final-desktop.png",
+      "selected": true
+    },
+    {
+      "id": "final-mobile",
+      "candidate": "final",
+      "state": "default",
+      "artifact_role": "mobile-reference",
+      "viewport": { "width": 390, "height": 844 },
+      "query": "?candidate=final",
+      "output": "screenshots/final-mobile.png",
+      "selected": true
+    },
+    {
+      "id": "state-loading-desktop",
+      "candidate": "loading",
+      "state": "loading",
+      "artifact_role": "state-reference",
+      "viewport": { "width": 1440, "height": 1000 },
+      "query": "?candidate=loading",
+      "output": "screenshots/state-loading-desktop.png",
+      "selected": true
+    },
+    {
+      "id": "state-empty-desktop",
+      "candidate": "empty",
+      "state": "empty",
+      "artifact_role": "state-reference",
+      "viewport": { "width": 1440, "height": 1000 },
+      "query": "?candidate=empty",
+      "output": "screenshots/state-empty-desktop.png",
+      "selected": true
+    },
+    {
+      "id": "state-error-desktop",
+      "candidate": "error",
+      "state": "error",
+      "artifact_role": "state-reference",
+      "viewport": { "width": 1440, "height": 1000 },
+      "query": "?candidate=error",
+      "output": "screenshots/state-error-desktop.png",
+      "selected": true
+    },
+    {
+      "id": "state-focus-desktop",
+      "candidate": "focus",
+      "state": "focus",
+      "artifact_role": "state-reference",
+      "viewport": { "width": 1440, "height": 1000 },
+      "query": "?candidate=focus",
+      "output": "screenshots/state-focus-desktop.png",
+      "selected": true
+    }
+  ],
+  "known_gaps": []
+}

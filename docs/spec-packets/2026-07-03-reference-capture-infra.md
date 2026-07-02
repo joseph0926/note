@@ -42,6 +42,7 @@
 
 - 포함: root `package.json` script 추가.
 - 포함: Playwright reference capture config 추가.
+- 포함: capture tooling 전용 TypeScript config와 typecheck script 추가.
 - 포함: capture manifest 기반 Playwright spec 추가.
 - 포함: 현재 production todo reference run의 `capture-manifest.json` 추가.
 - 포함: 관련 문서의 tooling 상태와 실행 명령 갱신.
@@ -93,6 +94,7 @@
 - [x] AC3: capture spec이 manifest를 읽어 screenshot을 생성하고 PNG dimensions를 검증한다.
 - [x] AC4: 현재 production todo reference run에 manifest가 존재한다.
 - [x] AC5: 승인된 외부 실행 또는 로컬 터미널의 `pnpm capture:reference` 실행으로 현재 run의 screenshot 생성이 성공한다.
+- [x] AC6: `pnpm typecheck`가 capture tooling TypeScript file set을 검증한다.
 
 ## 완료 조건 분류 (Acceptance Buckets)
 
@@ -131,6 +133,7 @@
 | AC3 | `pnpm exec playwright test -c playwright.reference.config.ts --list`, 승인된 외부 실행 `pnpm capture:reference` | passed |
 | AC4 | `capture-manifest.json` 확인 | passed |
 | AC5 | Playwright run + PNG dimension 확인 | passed |
+| AC6 | `pnpm typecheck` | passed |
 
 ## 증거 / 공백 로그 (Evidence / Gap Log)
 
@@ -143,6 +146,8 @@
   - 이는 capture code나 manifest failure가 아니라 managed shell sandbox의 macOS browser process 권한 문제로 판단한다.
   - 사용자 피드백에 따라 실제 screenshot 재생성의 기본 실행 경로는 managed shell이 아니라 승인된 외부 실행 또는 로컬 터미널 실행으로 정리했다.
   - 승인된 외부 실행 `pnpm capture:reference`에서 12개 capture test가 모두 통과했다.
+  - TypeScript config 기준은 [[typescript/tsconfig]], [[typescript/compiler-options-by-runtime]], [[typescript/module-system-and-resolution]]를 따랐다.
+  - `pnpm typecheck`가 통과했다.
 - Browser/visual/review evidence:
   - Playwright 기반 screenshot 12개가 `docs/goals/production-todo-app/references/linear-workspace-run1/screenshots/` 아래에 생성됐다.
   - `file screenshots/*.png` 확인 결과 desktop은 1440x1000, mobile은 390x844 PNG로 생성됐다.
@@ -161,3 +166,4 @@
 - 2026-07-03: managed shell 내부 `pnpm capture:reference`가 Chromium Mach port 권한 문제로 실패. 실제 캡처는 승인된 외부 실행 또는 로컬 터미널 실행을 기본값으로 운영 문서에 기록.
 - 2026-07-03: 브라우저 실행 전 test discovery는 통과했고 12개 capture test가 확인됨.
 - 2026-07-03: 승인된 외부 실행 `pnpm capture:reference`가 통과해 12개 screenshot PNG를 재생성함.
+- 2026-07-03: root `tsconfig.json`과 `pnpm typecheck`를 추가해 capture tooling TS file set을 검증 대상으로 고정함.

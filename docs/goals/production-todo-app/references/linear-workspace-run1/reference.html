@@ -1,0 +1,954 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Production Todo Linear Reference</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --canvas: #050609;
+      --shell: #090a0e;
+      --panel: #0f1014;
+      --panel-raised: #151720;
+      --panel-soft: #11131a;
+      --line: #252833;
+      --line-strong: #353947;
+      --text: #f5f6f8;
+      --muted: #b3b8c3;
+      --subtle: #747b8a;
+      --quiet: #4d5461;
+      --accent: #6671e8;
+      --accent-soft: rgba(102, 113, 232, .14);
+      --accent-line: rgba(102, 113, 232, .48);
+      --success: #42b883;
+      --warning: #e0b45a;
+      --danger: #e26d6d;
+      --radius: 8px;
+      --font: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-family: var(--font);
+      font-size: 14px;
+      line-height: 1.45;
+      letter-spacing: 0;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--canvas);
+      color: var(--text);
+      font-family: var(--font);
+      letter-spacing: 0;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+    }
+
+    button:focus-visible,
+    input:focus-visible,
+    [tabindex]:focus-visible {
+      outline: 2px solid #8f98ff;
+      outline-offset: 2px;
+    }
+
+    .candidate {
+      display: none;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    body[data-candidate="queue"] .candidate-queue,
+    body[data-candidate="detail"] .candidate-detail,
+    body[data-candidate="review"] .candidate-review,
+    body[data-candidate="final"] .candidate-final,
+    body[data-candidate="loading"] .candidate-loading,
+    body[data-candidate="empty"] .candidate-empty,
+    body[data-candidate="error"] .candidate-error,
+    body[data-candidate="focus"] .candidate-focus {
+      display: block;
+    }
+
+    .workspace {
+      width: 100%;
+      min-height: calc(100vh - 40px);
+      display: grid;
+      grid-template-columns: 228px minmax(0, 1fr) 360px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--shell);
+      box-shadow: 0 24px 80px rgba(0, 0, 0, .42);
+    }
+
+    .workspace.detail-forward {
+      grid-template-columns: 220px minmax(0, .9fr) 430px;
+    }
+
+    .workspace.review-forward {
+      grid-template-columns: 224px minmax(0, 1fr) 380px;
+    }
+
+    .sidebar {
+      min-width: 0;
+      padding: 18px 14px;
+      border-right: 1px solid var(--line);
+      background: #08090c;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 32px;
+      margin-bottom: 22px;
+      font-weight: 650;
+    }
+
+    .mark {
+      width: 21px;
+      height: 21px;
+      border-radius: 6px;
+      background: var(--accent);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .16);
+    }
+
+    .nav-group {
+      display: grid;
+      gap: 4px;
+      margin-bottom: 22px;
+    }
+
+    .nav-title {
+      margin: 0 8px 7px;
+      color: var(--quiet);
+      font-size: 11px;
+      font-weight: 650;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 32px;
+      padding: 0 8px;
+      border-radius: var(--radius);
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .nav-item.current {
+      color: var(--text);
+      background: var(--panel-raised);
+      box-shadow: inset 0 0 0 1px var(--line);
+    }
+
+    .count {
+      color: var(--subtle);
+      font-size: 12px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .main {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      background: var(--shell);
+    }
+
+    .topbar {
+      min-height: 62px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 18px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .command {
+      position: relative;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .command input {
+      width: 100%;
+      height: 38px;
+      padding: 0 108px 0 13px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: var(--panel);
+      color: var(--text);
+      outline: none;
+    }
+
+    .kbd {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      display: inline-flex;
+      align-items: center;
+      height: 22px;
+      padding: 0 7px;
+      border: 1px solid var(--line-strong);
+      border-radius: 6px;
+      background: #0b0d12;
+      color: var(--subtle);
+      font-size: 12px;
+    }
+
+    .primary {
+      min-width: 82px;
+      height: 36px;
+      padding: 0 13px;
+      border-radius: var(--radius);
+      background: var(--accent);
+      color: white;
+      font-weight: 650;
+      white-space: nowrap;
+    }
+
+    .primary[aria-busy="true"]::after {
+      content: "";
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      margin-left: 8px;
+      border-radius: 50%;
+      background: white;
+      opacity: .76;
+    }
+
+    .secondary {
+      height: 34px;
+      padding: 0 11px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .toolbar {
+      min-height: 58px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 0 18px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .title-block {
+      min-width: 0;
+    }
+
+    h1,
+    h2,
+    p {
+      margin: 0;
+    }
+
+    .title {
+      font-size: 18px;
+      font-weight: 680;
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .subtitle {
+      margin-top: 4px;
+      color: var(--subtle);
+      font-size: 12px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 0 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--panel);
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .chip.selected {
+      color: var(--text);
+      border-color: var(--accent-line);
+      background: var(--accent-soft);
+    }
+
+    .list {
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 30px minmax(0, 1fr) 86px 76px;
+      gap: 10px;
+      align-items: center;
+      min-height: 64px;
+      padding: 0 18px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .row:hover {
+      background: rgba(255, 255, 255, .025);
+    }
+
+    .row.selected {
+      background: var(--accent-soft);
+      box-shadow: inset 3px 0 0 var(--accent);
+    }
+
+    .row.tight {
+      min-height: 54px;
+    }
+
+    .check {
+      width: 18px;
+      height: 18px;
+      border: 1px solid var(--line-strong);
+      border-radius: 5px;
+      background: #0b0d12;
+    }
+
+    .task-title {
+      margin-bottom: 4px;
+      font-weight: 620;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .task-meta {
+      display: flex;
+      gap: 8px;
+      min-width: 0;
+      color: var(--subtle);
+      font-size: 12px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .pill {
+      justify-self: start;
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      padding: 0 8px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--panel-soft);
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .pill.high {
+      color: #ffd48c;
+      border-color: rgba(224, 180, 90, .38);
+      background: rgba(224, 180, 90, .11);
+    }
+
+    .pill.blocked {
+      color: #ffaaaa;
+      border-color: rgba(226, 109, 109, .42);
+      background: rgba(226, 109, 109, .12);
+    }
+
+    .pill.done {
+      color: #9be6c2;
+      border-color: rgba(66, 184, 131, .38);
+      background: rgba(66, 184, 131, .11);
+    }
+
+    .due {
+      color: var(--muted);
+      font-size: 12px;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    .detail {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      padding: 20px;
+      border-left: 1px solid var(--line);
+      background: #080a0f;
+    }
+
+    .detail h2 {
+      font-size: 20px;
+      font-weight: 680;
+      line-height: 1.24;
+    }
+
+    .detail p {
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .field-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .field {
+      display: grid;
+      gap: 5px;
+      min-width: 0;
+    }
+
+    .label {
+      color: var(--quiet);
+      font-size: 11px;
+      font-weight: 680;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    .value {
+      color: var(--text);
+      font-weight: 620;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .note {
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--panel);
+      color: var(--muted);
+    }
+
+    .note.warning {
+      color: #ffd9a0;
+      border-color: rgba(224, 180, 90, .34);
+      background: rgba(224, 180, 90, .10);
+    }
+
+    .note.error {
+      color: #ffc2c2;
+      border-color: rgba(226, 109, 109, .38);
+      background: rgba(226, 109, 109, .11);
+    }
+
+    .lane {
+      display: grid;
+      gap: 10px;
+      padding-top: 2px;
+    }
+
+    .lane-item {
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--panel);
+    }
+
+    .lane-title {
+      margin-bottom: 6px;
+      font-weight: 640;
+    }
+
+    .mini-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .metric {
+      min-width: 0;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--panel);
+    }
+
+    .metric strong {
+      display: block;
+      margin-top: 5px;
+      font-size: 20px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .state-shell {
+      max-width: 900px;
+      margin: 9vh auto 0;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--shell);
+      box-shadow: 0 24px 80px rgba(0, 0, 0, .42);
+      overflow: hidden;
+    }
+
+    .state-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      min-height: 62px;
+      padding: 0 18px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .state-body {
+      padding: 22px;
+    }
+
+    .skeleton {
+      height: 12px;
+      margin: 14px 0;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #151821, #242a38, #151821);
+    }
+
+    .empty-mark {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 42px;
+      height: 42px;
+      margin-bottom: 14px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--panel);
+      color: var(--accent);
+      font-weight: 760;
+    }
+
+    .focus-row {
+      display: grid;
+      grid-template-columns: 30px minmax(0, 1fr) 94px;
+      gap: 10px;
+      align-items: center;
+      min-height: 56px;
+      margin-top: 16px;
+      padding: 0 14px;
+      border: 1px solid var(--accent-line);
+      border-radius: 10px;
+      background: var(--accent-soft);
+      outline: 2px solid #8f98ff;
+      outline-offset: 2px;
+    }
+
+    @media (max-width: 760px) {
+      .candidate {
+        padding: 10px;
+      }
+
+      .workspace,
+      .workspace.detail-forward,
+      .workspace.review-forward {
+        min-height: calc(100vh - 20px);
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar,
+      .detail {
+        display: none;
+      }
+
+      .topbar {
+        min-height: auto;
+        flex-direction: column;
+        align-items: stretch;
+        padding: 12px;
+      }
+
+      .toolbar {
+        min-height: auto;
+        align-items: flex-start;
+        flex-direction: column;
+        padding: 14px 12px;
+      }
+
+      .filters {
+        justify-content: flex-start;
+      }
+
+      .command input {
+        padding-right: 13px;
+      }
+
+      .kbd {
+        display: none;
+      }
+
+      .mini-grid {
+        grid-template-columns: 1fr;
+        padding: 12px;
+      }
+
+      .row,
+      .row.tight {
+        grid-template-columns: 28px minmax(0, 1fr);
+        min-height: 72px;
+        padding: 0 12px;
+      }
+
+      .row .pill,
+      .row .due {
+        display: none;
+      }
+
+      .task-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0 8px;
+        white-space: normal;
+      }
+
+      .state-shell {
+        margin: 10px auto 0;
+      }
+
+      .state-head {
+        align-items: flex-start;
+        flex-direction: column;
+        padding: 16px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        transition: none !important;
+        animation: none !important;
+        scroll-behavior: auto !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <section class="candidate candidate-queue" aria-label="Linear queue variant">
+    <div class="workspace">
+      <aside class="sidebar">
+        <div class="brand"><span class="mark"></span><span>Todo OS</span></div>
+        <div class="nav-group">
+          <p class="nav-title">Work</p>
+          <div class="nav-item current"><span>Inbox Queue</span><span class="count">12</span></div>
+          <div class="nav-item"><span>Today</span><span class="count">7</span></div>
+          <div class="nav-item"><span>Blocked</span><span class="count">3</span></div>
+          <div class="nav-item"><span>Review</span><span class="count">5</span></div>
+        </div>
+        <div class="nav-group">
+          <p class="nav-title">Projects</p>
+          <div class="nav-item"><span>Product</span><span class="count">9</span></div>
+          <div class="nav-item"><span>Systems</span><span class="count">6</span></div>
+          <div class="nav-item"><span>Personal</span><span class="count">8</span></div>
+        </div>
+      </aside>
+      <main class="main">
+        <div class="topbar">
+          <div class="command"><input aria-label="Quick task capture" value="Capture task and assign project"><span class="kbd">⌘ K</span></div>
+          <button class="primary">Add task</button>
+        </div>
+        <div class="toolbar">
+          <div class="title-block">
+            <h1 class="title">Inbox Queue</h1>
+            <p class="subtitle">Fast triage, stable filters, selected task detail</p>
+          </div>
+          <div class="filters" aria-label="Filters">
+            <span class="chip selected">Open 12</span>
+            <span class="chip">High</span>
+            <span class="chip">Blocked</span>
+            <span class="chip">Due soon</span>
+          </div>
+        </div>
+        <div class="list">
+          <div class="row selected"><span class="check"></span><div><div class="task-title">Define inbox shell acceptance</div><div class="task-meta"><span>Spec</span><span>List, detail, empty, error, focus</span></div></div><span class="pill high">High</span><span class="due">Today</span></div>
+          <div class="row"><span class="check"></span><div><div class="task-title">Model recurring task scheduling</div><div class="task-meta"><span>Domain</span><span>Repeat rule and timezone boundary</span></div></div><span class="pill">Medium</span><span class="due">Tue</span></div>
+          <div class="row"><span class="check"></span><div><div class="task-title">Recover failed offline mutation</div><div class="task-meta"><span>Reliability</span><span>Retry path and conflict copy</span></div></div><span class="pill blocked">Blocked</span><span class="due">Wed</span></div>
+          <div class="row"><span class="check"></span><div><div class="task-title">Collapse mobile task row fields</div><div class="task-meta"><span>Mobile</span><span>Priority, due, project summary</span></div></div><span class="pill">Normal</span><span class="due">Fri</span></div>
+        </div>
+      </main>
+      <aside class="detail">
+        <div>
+          <h2>Define inbox shell acceptance</h2>
+          <p>The list remains the primary reading surface. The detail pane explains edit scope, state requirements, and why a blocked action is unavailable.</p>
+        </div>
+        <div class="field-grid">
+          <div class="field"><span class="label">Status</span><span class="value">In progress</span></div>
+          <div class="field"><span class="label">Priority</span><span class="value">High</span></div>
+          <div class="field"><span class="label">Due</span><span class="value">Today 17:00</span></div>
+          <div class="field"><span class="label">Project</span><span class="value">Product</span></div>
+        </div>
+        <div class="note warning">Complete is disabled until empty and error states are specified.</div>
+      </aside>
+    </div>
+  </section>
+
+  <section class="candidate candidate-detail" aria-label="Linear detail variant">
+    <div class="workspace detail-forward">
+      <aside class="sidebar">
+        <div class="brand"><span class="mark"></span><span>Todo OS</span></div>
+        <div class="nav-group">
+          <p class="nav-title">Focus</p>
+          <div class="nav-item current"><span>Today Focus</span><span class="count">7</span></div>
+          <div class="nav-item"><span>Inbox</span><span class="count">12</span></div>
+          <div class="nav-item"><span>Review</span><span class="count">5</span></div>
+        </div>
+      </aside>
+      <main class="main">
+        <div class="topbar">
+          <div class="command"><input aria-label="Quick task capture" value="Set next action for selected task"><span class="kbd">⌘ J</span></div>
+          <button class="primary">Save</button>
+        </div>
+        <div class="mini-grid" aria-label="Today summary">
+          <div class="metric"><span class="label">Open</span><strong>7</strong></div>
+          <div class="metric"><span class="label">Blocked</span><strong>3</strong></div>
+          <div class="metric"><span class="label">Due</span><strong>4</strong></div>
+        </div>
+        <div class="toolbar">
+          <div class="title-block">
+            <h1 class="title">Today Focus</h1>
+            <p class="subtitle">Queue is quieter; selected task owns the right pane</p>
+          </div>
+          <div class="filters"><span class="chip selected">Now</span><span class="chip">Later</span></div>
+        </div>
+        <div class="list">
+          <div class="row tight selected"><span class="check"></span><div><div class="task-title">Write first section SPEC</div><div class="task-meta"><span>Spec</span><span>Inbox shell only</span></div></div><span class="pill high">High</span><span class="due">Now</span></div>
+          <div class="row tight"><span class="check"></span><div><div class="task-title">Choose local storage boundary</div><div class="task-meta"><span>Architecture</span><span>Later SPEC</span></div></div><span class="pill">Medium</span><span class="due">Tue</span></div>
+          <div class="row tight"><span class="check"></span><div><div class="task-title">Inspect keyboard path</div><div class="task-meta"><span>A11y</span><span>Focus and row action</span></div></div><span class="pill">Normal</span><span class="due">Fri</span></div>
+        </div>
+      </main>
+      <aside class="detail">
+        <div>
+          <h2>Write first section SPEC</h2>
+          <p>This variant is best when the first implementation target needs a strong selected task panel and fewer competing row details.</p>
+        </div>
+        <div class="field-grid">
+          <div class="field"><span class="label">Section</span><span class="value">Inbox shell</span></div>
+          <div class="field"><span class="label">State scope</span><span class="value">Selected, busy, disabled</span></div>
+          <div class="field"><span class="label">Next action</span><span class="value">Draft SPEC</span></div>
+          <div class="field"><span class="label">Owner</span><span class="value">You</span></div>
+        </div>
+        <div class="lane">
+          <div class="lane-item"><div class="lane-title">Acceptance note</div><p>Stable shell, row selection, and detail pane must survive mobile collapse.</p></div>
+          <div class="lane-item"><div class="lane-title">Risk note</div><p>Do not turn this into a modal-first workflow.</p></div>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <section class="candidate candidate-review" aria-label="Linear review variant">
+    <div class="workspace review-forward">
+      <aside class="sidebar">
+        <div class="brand"><span class="mark"></span><span>Todo OS</span></div>
+        <div class="nav-group">
+          <p class="nav-title">Review</p>
+          <div class="nav-item current"><span>Blocked Review</span><span class="count">3</span></div>
+          <div class="nav-item"><span>Inbox</span><span class="count">12</span></div>
+          <div class="nav-item"><span>Today</span><span class="count">7</span></div>
+        </div>
+      </aside>
+      <main class="main">
+        <div class="topbar">
+          <div class="command"><input aria-label="Search blocked tasks" value="Search blocked tasks and recovery notes"><span class="kbd">/</span></div>
+          <button class="primary">Review</button>
+        </div>
+        <div class="toolbar">
+          <div class="title-block">
+            <h1 class="title">Blocked Review</h1>
+            <p class="subtitle">Recovery-first surface for production-grade task state</p>
+          </div>
+          <div class="filters"><span class="chip selected">Blocked 3</span><span class="chip">Needs decision</span></div>
+        </div>
+        <div class="list">
+          <div class="row selected"><span class="check"></span><div><div class="task-title">Resolve failed sync conflict</div><div class="task-meta"><span>Recovery</span><span>Local edits preserved</span></div></div><span class="pill blocked">Blocked</span><span class="due">Today</span></div>
+          <div class="row"><span class="check"></span><div><div class="task-title">Unblock recurring task model</div><div class="task-meta"><span>Domain</span><span>Rule format undecided</span></div></div><span class="pill blocked">Blocked</span><span class="due">Wed</span></div>
+          <div class="row"><span class="check"></span><div><div class="task-title">Review overdue empty-state copy</div><div class="task-meta"><span>UX copy</span><span>Needs reset path</span></div></div><span class="pill high">High</span><span class="due">Fri</span></div>
+        </div>
+      </main>
+      <aside class="detail">
+        <div>
+          <h2>Resolve failed sync conflict</h2>
+          <p>Production Todo needs recovery surfaces, not just happy-path completion. This variant makes blocked state and next decision prominent.</p>
+        </div>
+        <div class="note error">Sync failed for this task. Local changes are preserved.</div>
+        <div class="lane">
+          <div class="lane-item"><div class="lane-title">Retry sync</div><p>Attempt upload again without losing local edits.</p></div>
+          <div class="lane-item"><div class="lane-title">Inspect conflict</div><p>Compare local and remote task fields before resolving.</p></div>
+          <div class="lane-item"><div class="lane-title">Defer</div><p>Keep task blocked and return it to review.</p></div>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <section class="candidate candidate-final" aria-label="Selected Linear reference">
+    <div class="workspace">
+      <aside class="sidebar">
+        <div class="brand"><span class="mark"></span><span>Todo OS</span></div>
+        <div class="nav-group">
+          <p class="nav-title">Work</p>
+          <div class="nav-item current"><span>Today Command</span><span class="count">7</span></div>
+          <div class="nav-item"><span>Inbox Queue</span><span class="count">12</span></div>
+          <div class="nav-item"><span>Blocked</span><span class="count">3</span></div>
+          <div class="nav-item"><span>Review</span><span class="count">5</span></div>
+        </div>
+        <div class="nav-group">
+          <p class="nav-title">Views</p>
+          <div class="nav-item"><span>High priority</span><span class="count">4</span></div>
+          <div class="nav-item"><span>Due this week</span><span class="count">9</span></div>
+          <div class="nav-item"><span>Waiting</span><span class="count">2</span></div>
+        </div>
+      </aside>
+      <main class="main">
+        <div class="topbar">
+          <div class="command"><input aria-label="Quick task capture" value="Capture task, assign project, set priority"><span class="kbd">⌘ K</span></div>
+          <button class="primary" aria-busy="true">Saving</button>
+        </div>
+        <div class="toolbar">
+          <div class="title-block">
+            <h1 class="title">Today Command</h1>
+            <p class="subtitle">Linear-style queue for capture, triage, selection, and recovery</p>
+          </div>
+          <div class="filters"><span class="chip selected">Open 7</span><span class="chip">Blocked 3</span><span class="chip">Due soon</span><span class="chip">Reset</span></div>
+        </div>
+        <div class="list">
+          <div class="row selected"><span class="check"></span><div><div class="task-title">Draft inbox shell SPEC</div><div class="task-meta"><span>Spec</span><span>Stable shell, quick capture, list selection</span></div></div><span class="pill high">High</span><span class="due">Today</span></div>
+          <div class="row"><span class="check"></span><div><div class="task-title">Define task detail state model</div><div class="task-meta"><span>Product</span><span>Selected, busy, disabled, blocked</span></div></div><span class="pill">Medium</span><span class="due">Tue</span></div>
+          <div class="row"><span class="check"></span><div><div class="task-title">Resolve failed sync conflict</div><div class="task-meta"><span>Recovery</span><span>Retry and inspect conflict</span></div></div><span class="pill blocked">Blocked</span><span class="due">Wed</span></div>
+          <div class="row"><span class="check"></span><div><div class="task-title">Write mobile row collapse rule</div><div class="task-meta"><span>Mobile</span><span>Keep primary action visible</span></div></div><span class="pill">Normal</span><span class="due">Fri</span></div>
+        </div>
+      </main>
+      <aside class="detail">
+        <div>
+          <h2>Draft inbox shell SPEC</h2>
+          <p>Use this reference for the first implementation section: app shell, quick capture, filterable list, selected detail, busy save, and blocked recovery note.</p>
+        </div>
+        <div class="field-grid">
+          <div class="field"><span class="label">Section</span><span class="value">Inbox shell</span></div>
+          <div class="field"><span class="label">Priority</span><span class="value">High</span></div>
+          <div class="field"><span class="label">Due</span><span class="value">Today 17:00</span></div>
+          <div class="field"><span class="label">State</span><span class="value">Saving</span></div>
+        </div>
+        <div class="note warning">Completion is unavailable until empty, error, and focus states are included in the section SPEC.</div>
+        <div class="lane">
+          <div class="lane-item"><div class="lane-title">Borrow</div><p>Dense shell, sparse accent, selected row strength, state-specific detail pane.</p></div>
+          <div class="lane-item"><div class="lane-title">Do not borrow</div><p>Raw Linear colors, custom font, brand mark, or marketing-page darkness.</p></div>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <section class="candidate candidate-loading" aria-label="Loading state reference">
+    <div class="state-shell" aria-busy="true">
+      <div class="state-head">
+        <div class="title-block">
+          <h1 class="title">Today Command</h1>
+          <p class="subtitle">Stable shell remains visible while tasks load</p>
+        </div>
+        <span class="chip selected">Loading</span>
+      </div>
+      <div class="state-body">
+        <div class="skeleton" style="width: 82%"></div>
+        <div class="skeleton" style="width: 95%"></div>
+        <div class="skeleton" style="width: 74%"></div>
+        <div class="skeleton" style="width: 88%"></div>
+        <div class="skeleton" style="width: 62%"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="candidate candidate-empty" aria-label="Empty state reference">
+    <div class="state-shell">
+      <div class="state-head">
+        <div class="title-block">
+          <h1 class="title">Inbox Queue</h1>
+          <p class="subtitle">No tasks match the current filters</p>
+        </div>
+        <button class="secondary">Reset filters</button>
+      </div>
+      <div class="state-body">
+        <div class="empty-mark">0</div>
+        <h2>Queue is clear</h2>
+        <p class="subtitle">Capture a new task or reset filters to see hidden work.</p>
+        <button class="primary" style="margin-top: 18px">Capture task</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="candidate candidate-error" aria-label="Error state reference">
+    <div class="state-shell">
+      <div class="state-head">
+        <div class="title-block">
+          <h1 class="title">Sync recovery</h1>
+          <p class="subtitle">Local changes are preserved</p>
+        </div>
+        <span class="pill blocked">3 failed</span>
+      </div>
+      <div class="state-body">
+        <div class="note error">Sync failed for 3 tasks. Retry does not discard local edits.</div>
+        <div class="lane" style="margin-top: 14px">
+          <div class="lane-item"><div class="lane-title">Retry sync</div><p>Attempt to upload pending task changes again.</p></div>
+          <div class="lane-item"><div class="lane-title">Inspect conflict</div><p>Compare local and remote values before resolving blocked work.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="candidate candidate-focus" aria-label="Focus state reference">
+    <div class="state-shell">
+      <div class="state-head">
+        <div class="title-block">
+          <h1 class="title">Keyboard path</h1>
+          <p class="subtitle">Focus is stronger than hover and visible without color alone</p>
+        </div>
+        <span class="chip selected">Focus</span>
+      </div>
+      <div class="state-body">
+        <div class="command"><input autofocus aria-label="Focused quick task capture" value="Focused quick capture"><span class="kbd">⌘ K</span></div>
+        <div class="focus-row" tabindex="0"><span class="check"></span><div><div class="task-title">Focused row action</div><div class="task-meta"><span>Keyboard</span><span>Visible focus ring and selected-like state</span></div></div><span class="pill">Ready</span></div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    const params = new URLSearchParams(window.location.search)
+    const candidate = params.get('candidate') || 'final'
+    document.body.dataset.candidate = candidate
+  </script>
+</body>
+</html>
