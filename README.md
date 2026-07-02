@@ -23,6 +23,11 @@
 ## Artifact Layout
 
 ```text
+apps/
+  <goal-slug>/
+    package.json
+    src/
+
 docs/
   goals/
     <goal-slug>/
@@ -38,6 +43,9 @@ docs/
 - 레퍼런스 생성은 구현이 아니라 판단 재료 생성입니다.
 - SPEC은 섹션 단위로 닫습니다.
 - 구현은 사용자가 직접 합니다.
+- 목표 앱은 `apps/<goal-slug>/` 아래 독립 앱으로 시작합니다.
+- `packages/`, `pnpm-workspace.yaml`, `turbo.json`은 실제 공유 코드나 root-level 검증 필요가 생길 때만 도입합니다.
+- shadcn은 첫 앱에서는 app-local로 두고, 두 앱 이상에서 같은 token/primitive를 유지해야 할 때 shared `packages/ui` 승격을 검토합니다.
 - 에이전트 피드백은 가능한 한 research/wiki citation 또는 로컬 source에 근거해야 합니다.
 - 자세한 에이전트 규칙은 `AGENTS.md`를 따릅니다.
 - [CLAUDE.md](./CLAUDE.md)는 `@AGENTS.md` 한줄만 작성합니다.

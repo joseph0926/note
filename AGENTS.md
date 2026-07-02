@@ -22,11 +22,22 @@
 
 ## 산출물 위치
 
+- 목표별 앱 코드: `apps/<goal-slug>/`
 - 목표별 운영 문서: `docs/goals/<goal-slug>/`
 - 레퍼런스 산출물: `docs/goals/<goal-slug>/references/`
 - 섹션별 SPEC packet: `docs/spec-packets/YYYY-MM-DD-<goal-slug>-<section-slug>.md`
 - 구현 후 피드백: `docs/goals/<goal-slug>/feedback/`
 - 스크린샷과 검증 evidence: 목표별 `artifacts/` 또는 해당 스킬이 정한 더 가까운 경로
+
+## 앱 구조
+
+- 목표 앱은 기본적으로 `apps/<goal-slug>/` 아래 독립 앱으로 시작한다.
+- 각 앱은 자기 `package.json`, dependency, script, dev server, test command를 소유한다.
+- 목표 앱은 React 기반일 수 있지만 frontend-only, Next.js 풀스택, React + Fastify 조합처럼 스택이 달라질 수 있다.
+- `packages/`는 같은 UI primitive, token, schema, test helper가 두 앱 이상에서 실제로 재사용되고 shared contract가 복사보다 단순해질 때 만든다.
+- `pnpm-workspace.yaml`은 `packages/*`가 생기거나 root에서 여러 앱을 함께 관리해야 할 때 만든다.
+- `turbo.json`은 workspace가 생긴 뒤 `build`, `test`, `lint`, `typecheck` task graph와 cache가 반복 시간을 실질적으로 줄일 때 만든다.
+- shadcn은 첫 앱에서는 app-local로 둔다. 두 앱 이상에서 같은 token/primitive를 유지해야 할 때 shared `packages/ui` 승격을 검토한다.
 
 ## 경로 표기
 
@@ -59,6 +70,7 @@
 ## 금지/주의
 
 - 목표나 섹션이 확정되지 않은 상태에서 앱 scaffold를 만들지 않는다.
+- 첫 목표 앱이 정해지기 전에는 root workspace, shared package, Turbo 설정을 만들지 않는다.
 - 레퍼런스 생성 요청을 production 구현으로 해석하지 않는다.
 - mock 데이터에 AI 제품/모델/벤더명을 쓰지 않는다.
 - git 쓰기 작업은 하지 않는다.
